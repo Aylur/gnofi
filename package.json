@@ -1,0 +1,31 @@
+{
+  "name": "gnofi",
+  "type": "module",
+  "author": "Aylur",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aylur/gnofi.git"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@girs/clutter-16": "latest",
+    "@girs/gtk-4.0": "latest",
+    "@girs/gjs": "latest",
+    "eslint": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest"
+  },
+  "peerDependencies": {
+    "fuse.js": "^7.1.0",
+    "gnim": "^1.5.1"
+  },
+  "exports": {
+    "./gtk": "./gtk/index.ts"
+  },
+  "prettier": {
+    "semi": false,
+    "tabWidth": 2,
+    "printWidth": 90,
+    "quoteProps": "consistent"
+  }
+}
