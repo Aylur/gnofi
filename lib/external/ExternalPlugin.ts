@@ -4,6 +4,14 @@ import type { Request } from "./subprocess"
 import type { Picker } from "../Picker"
 
 export namespace ExternalPlugin {
+  export interface SignalSignatures extends PickerPlugin.SignalSignatures<unknown> {
+    "set-props": (id: string, props: object) => void
+    "action": (data: unknown) => void
+    "warning": (warning: unknown) => void
+    "error": (error: unknown) => void
+    "log": (error: unknown) => void
+  }
+
   export interface ConstructorProps extends PickerPlugin.ConstructorProps {
     picker: Picker
     executable: string
@@ -26,6 +34,8 @@ function isValidFocusTarget(target: unknown): target is Picker.FocusTarget {
 
 @register()
 export class ExternalPlugin extends PickerPlugin<unknown> {
+  declare $signals: ExternalPlugin.SignalSignatures
+
   private picker: Picker
   private delay: number = 0
   private debounce?: ReturnType<typeof setTimeout>
@@ -51,6 +61,7 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
     void log
   }
 
+  @signal(Object)
   action(data: unknown) {
     this.request("action", data)
   }
