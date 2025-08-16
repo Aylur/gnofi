@@ -1,6 +1,6 @@
 import GLib from "gi://GLib?version=2.0"
 import { property, register } from "gnim/gobject"
-import { PickerPlugin } from "./PickerPlugin"
+import { PickerPlugin } from "../PickerPlugin"
 import { execAsync, exec, writeFileAsync } from "./os"
 
 // FIXME: support other achitectures

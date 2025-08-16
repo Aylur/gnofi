@@ -1,7 +1,7 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import { AccumulatorType, getter, property, register, setter, signal } from "gnim/gobject"
-import { PickerPlugin } from "./PickerPlugin"
+import { PickerPlugin } from "../PickerPlugin"
 import Fuse from "fuse.js/basic"
 import { ls } from "./os"
 
