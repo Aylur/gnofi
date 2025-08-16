@@ -76,7 +76,7 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
 
     this.debounce = setTimeout(() => {
       super.search(text)
-      this.request(text)
+      this.request("search", text)
     }, this.delay)
   }
 
@@ -179,7 +179,8 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
     }
   }
 
-  protected async request(_action: string, _payload?: unknown): Promise<void> {
+  protected async request(action: string, payload?: unknown): Promise<void> {
+    void [action, payload]
     throw Error("missing implementation")
   }
 
