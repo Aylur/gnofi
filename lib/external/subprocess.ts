@@ -47,7 +47,7 @@ function recursiveRead(
 
 function proc(command: string) {
   const [, cmd] = GLib.shell_parse_argv(command)
-  if (cmd === null) throw Error(_("shell_parse_argv failed: '%s'").format(command))
+  if (cmd === null) throw Error(`shell_parse_argv failed: '${command}'`)
 
   return Gio.Subprocess.new(
     cmd,

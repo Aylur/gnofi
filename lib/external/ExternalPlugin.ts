@@ -155,7 +155,7 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
         }
         break
       default:
-        this.error("unknown request action '%s'".format(action))
+        this.error(`unknown request action '${action}'`)
         break
     }
   }
