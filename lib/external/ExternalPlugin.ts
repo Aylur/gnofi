@@ -107,12 +107,12 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
         this.applySettings(payload)
         break
 
-      case "clear":
-        this.clear()
-        break
-
       case "result":
-        this.result = [payload]
+        if (!Array.isArray(payload)) {
+          return this.error("invalid result call: payload is not an array")
+        }
+
+        this.result = payload
         break
 
       case "set": {
