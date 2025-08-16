@@ -115,6 +115,65 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
         this.result = payload
         break
 
+      case "result:push":
+        this.result.push(payload)
+        this.notify("result")
+        break
+
+      case "result:pop":
+        this.result.pop()
+        this.notify("result")
+        break
+
+      case "result:unshift":
+        this.result.unshift(payload)
+        this.notify("result")
+        break
+
+      case "result:shift":
+        this.result.shift()
+        this.notify("result")
+        break
+
+      case "result:slice":
+        let start: number, end: number | undefined
+
+        if (!Array.isArray(payload)) {
+          return this.error("invalid result:shift call: payload is not an tuple")
+        }
+
+        if (payload.length === 2) {
+          ;[start, end] = payload
+        } else if (payload.length === 1) {
+          ;[start] = payload
+        } else {
+          return this.error(
+            "invalid result:shift call: tuple should have 1 or 2 elements",
+          )
+        }
+
+        if (typeof start !== "number") {
+          return this.error(
+            "invalid result:shift call: start paremeter has to be a number",
+          )
+        }
+
+        if (payload.length === 2 && typeof start !== "number") {
+          return this.error("invalid result:shift call: end paremeter has to be a number")
+        }
+
+        this.result.slice(start, end)
+        this.notify("result")
+        break
+
+      case "result:remove":
+        if (typeof payload !== "number") {
+          return this.error("invalid result:remove call: payload is not an index number")
+        }
+
+        this.result = this.result.filter((_, i) => i !== payload)
+        break
+
       case "set": {
         if (typeof payload !== "object" || payload === null) {
           return this.error("invalid set call: payload is not an object")
