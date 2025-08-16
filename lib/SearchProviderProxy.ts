@@ -1,6 +1,17 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
+import GdkPixbuf from "gi://GdkPixbuf"
 import { Variant, Service, iface, methodAsync } from "gnim/dbus"
+
+type ItemVariant = {
+  "id": Variant<"s">
+  "name": Variant<"s">
+  "description"?: Variant<"s">
+  "icon"?: Variant<any>
+  "gicon"?: Variant<"s">
+  "icon-data"?: Variant<"(iiibiiay)">
+  "clipboardText"?: Variant<"s">
+}
 
 export namespace SearchProviderProxy {
   export type Item = SearchItem
@@ -23,27 +34,30 @@ class SearchItem {
   readonly description?: string
   readonly gicon?: Gio.Icon | null
 
-  constructor(proxy: SearchProviderProxy, variant: Record<string, Variant<any>>) {
+  constructor(proxy: SearchProviderProxy, variant: ItemVariant) {
     this.proxy = proxy
     this.variant = variant
 
-    this.id = variant["id"].get_string()[0]
-    this.name = variant["name"].get_string()[0]
+    this.id = variant["id"].unpack()
+    this.name = variant["name"].unpack()
+    this.description = variant["description"]?.unpack()
+    this.clipboardText = variant["clipboardText"]?.unpack()
 
-    if ("description" in variant) {
-      this.description = variant["description"].get_string()[0]
-    }
-
-    if ("icon" in variant) {
+    if (variant["icon"]) {
       this.gicon = Gio.Icon.deserialize(variant["icon"])
-    } else if ("gicon" in variant) {
+    } else if (variant["gicon"]) {
       this.gicon = Gio.Icon.new_for_string(variant["gicon"].get_string()[0])
-    } else if ("icon-data" in variant) {
-      this.gicon = SearchProviderProxy.parseIconData?.(variant["icon-data"])
-    }
-
-    if ("clipboardText" in variant) {
-      this.clipboardText = variant["clipboardText"].get_string()[0]
+    } else if (variant["icon-data"]) {
+      const [w, h, rs, alpha, bps, , data] = variant["icon-data"].deepUnpack()
+      this.gicon = GdkPixbuf.Pixbuf.new_from_bytes(
+        data,
+        GdkPixbuf.Colorspace.RGB,
+        alpha,
+        bps,
+        w,
+        h,
+        rs,
+      )
     }
   }
 
@@ -54,8 +68,6 @@ class SearchItem {
 
 @iface("org.gnome.Shell.SearchProvider2")
 export class SearchProviderProxy extends Service {
-  static parseIconData?: (variant: Variant<"(iiibiiay)">) => Gio.Icon
-
   #ready = false
   appInfo?: Gio.DesktopAppInfo
 
@@ -85,9 +97,7 @@ export class SearchProviderProxy extends Service {
   }
 
   @methodAsync(["as"], ["aa{sv}"])
-  async GetResultMetas(
-    identifiers: string[],
-  ): Promise<[Array<Record<string, Variant<any>>>]> {
+  async GetResultMetas(identifiers: string[]): Promise<[Array<ItemVariant>]> {
     return Promise.reject(identifiers)
   }
 

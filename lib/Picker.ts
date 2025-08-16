@@ -13,24 +13,27 @@ import { PickerPlugin } from "./PickerPlugin"
 import { PickerCollectionPlugin } from "./PickerCollectionPlugin"
 import { HelpPickerPlugin } from "./HelpPickerPlugin"
 
-interface Keyval {
-  KEY_Escape: number
-  KEY_Return: number
-  KEY_Tab: number
-  KEY_ISO_Left_Tab: number
-  KEY_BackSpace: number
-  KEY_Down: number
-  KEY_Up: number
-  KEY_Right: number
-  KEY_Left: number
-  KEY_Shift_L: number
-  KEY_Shift_R: number
-  KEY_Control_L: number
-  KEY_Control_R: number
-}
+type Keyname =
+  | "Escape"
+  | "Return"
+  | "Tab"
+  | "ISO_Left_Tab"
+  | "BackSpace"
+  | "Down"
+  | "Up"
+  | "Right"
+  | "Left"
+  | "Shift_L"
+  | "Shift_R"
+  | "Control_L"
+  | "Control_R"
+  | "n"
+  | "p"
 
 export namespace Picker {
   export interface Event {
+    nativeEvent?: unknown
+    controlMod?: boolean
     focused: boolean
     key: number
   }
@@ -52,6 +55,7 @@ export namespace Picker {
   }
 
   export interface ConstructorProps extends GObject.Object.ConstructorProps {
+    keys: Record<`KEY_${Keyname}`, number>
     commandLeader?: string
     visibleCommand?: boolean
   }
@@ -59,8 +63,6 @@ export namespace Picker {
 
 @register()
 export class Picker extends GObject.Object {
-  static keys?: Keyval
-
   declare static $gtype: GType<Picker>
   declare $signals: Picker.SignalSignatures
 
@@ -118,11 +120,17 @@ export class Picker extends GObject.Object {
   private _helpPlugin = new HelpPickerPlugin({ command: "help", picker: this })
   private _defaultPlugin = new PickerCollectionPlugin({ command: "default" })
   private _activePlugin = this._dockPlugin
+  private _keys: Record<`KEY_${Keyname}`, number>
 
-  constructor({ commandLeader = ":", visibleCommand = false }: Picker.ConstructorProps) {
+  constructor({
+    commandLeader = ":",
+    visibleCommand = false,
+    keys,
+  }: Picker.ConstructorProps) {
     super()
     this.commandLeader = commandLeader
     this.visibleCommand = visibleCommand
+    this._keys = keys
   }
 
   connect<S extends keyof Picker.SignalSignatures>(
@@ -270,10 +278,21 @@ export class Picker extends GObject.Object {
   }
 
   keypress(event: Picker.Event): boolean {
-    const { focused, key } = event
-    const { keys: Key } = Picker
+    const { key, focused, controlMod } = event
+    const Key = this._keys
 
-    if (!Key) throw Error("env is not set")
+    if (controlMod) {
+      switch (key) {
+        case Key.KEY_n: {
+          this.focus("forward")
+          return true
+        }
+        case Key.KEY_p: {
+          this.focus("backward")
+          return true
+        }
+      }
+    }
 
     switch (key) {
       case Key.KEY_Escape: {
@@ -355,7 +374,7 @@ export class Picker extends GObject.Object {
       }
       default: {
         if (!focused) {
-          this.startSearch(event)
+          this.startSearch({ focused, key })
           return true
         }
       }

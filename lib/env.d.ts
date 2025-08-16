@@ -1,4 +1,4 @@
-import "@girs/gtk-4.0"
-import "@girs/clutter-16"
+import "@girs/gdkpixbuf-2.0"
+import "@girs/gio-2.0"
 import "@girs/gjs"
 import "@girs/gjs/dom"

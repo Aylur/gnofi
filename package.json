@@ -8,8 +8,8 @@
   },
   "devDependencies": {
     "@eslint/js": "latest",
-    "@girs/clutter-16": "latest",
-    "@girs/gtk-4.0": "latest",
+    "@girs/gdkpixbuf-2.0": "latest",
+    "@girs/gio-2.0": "latest",
     "@girs/gjs": "latest",
     "eslint": "latest",
     "typescript": "latest",
@@ -20,7 +20,7 @@
     "gnim": "^1.5.1"
   },
   "exports": {
-    "./gtk": "./gtk/index.ts"
+    ".": "./lib/index.ts"
   },
   "prettier": {
     "semi": false,
