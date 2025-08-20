@@ -7,17 +7,13 @@
     "url": "https://github.com/Aylur/gnofi.git"
   },
   "devDependencies": {
-    "@eslint/js": "latest",
     "@girs/gdkpixbuf-2.0": "latest",
     "@girs/gio-2.0": "latest",
-    "@girs/gjs": "latest",
-    "eslint": "latest",
-    "typescript": "latest",
-    "typescript-eslint": "latest"
+    "@girs/gjs": "latest"
   },
   "peerDependencies": {
     "fuse.js": "^7.1.0",
-    "gnim": "^1.5.1"
+    "gnim": "^1.5.5"
   },
   "exports": {
     ".": "./lib/index.ts"
