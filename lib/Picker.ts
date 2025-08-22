@@ -31,10 +31,10 @@ type Keyname =
   | "p"
 
 export namespace Picker {
-  export interface Event {
-    nativeEvent?: unknown
+  export interface Event<NativeEvent> {
+    nativeEvent?: NativeEvent
     controlMod?: boolean
-    focused: boolean
+    focusedEntry: boolean
     key: number
   }
 
@@ -47,9 +47,10 @@ export namespace Picker {
     | "right"
     | "left"
 
-  export interface SignalSignatures extends GObject.Object.SignalSignatures {
+  export interface SignalSignatures<NativeEvent> extends GObject.Object.SignalSignatures {
     "notify::text": (spec: ParamSpec<string>) => void
     "notify::active-plugin": (spec: ParamSpec<PickerPlugin<unknown>>) => void
+    "start-search": (event: Event<NativeEvent>) => void
     "focus": (target: FocusTarget) => void
     "close": () => void
   }
@@ -62,9 +63,9 @@ export namespace Picker {
 }
 
 @register()
-export class Picker extends GObject.Object {
+export class Picker<NativeEvent = any> extends GObject.Object {
   declare static $gtype: GType<Picker>
-  declare $signals: Picker.SignalSignatures
+  declare $signals: Picker.SignalSignatures<NativeEvent>
 
   @property(String) commandLeader
   @property(Boolean) visibleCommand
@@ -110,6 +111,10 @@ export class Picker extends GObject.Object {
     this.focus("entry")
   }
 
+  @signal(Object) startSearch(event: object) {
+    void event
+  }
+
   @signal(gtype<Picker.FocusTarget>(String)) focus(target: Picker.FocusTarget): void {
     return void target
   }
@@ -133,9 +138,9 @@ export class Picker extends GObject.Object {
     this._keys = keys
   }
 
-  connect<S extends keyof Picker.SignalSignatures>(
-    signal: S,
-    callback: GObject.SignalCallback<this, Picker.SignalSignatures[S]>,
+  connect<S extends keyof this["$signals"]>(
+    signal: Extract<string, S>,
+    callback: GObject.SignalCallback<this, this["$signals"][S]>,
   ): number {
     return super.connect(signal, callback)
   }
@@ -273,12 +278,8 @@ export class Picker extends GObject.Object {
     }
   }
 
-  protected startSearch(event: Picker.Event) {
-    void event
-  }
-
-  keypress(event: Picker.Event): boolean {
-    const { key, focused, controlMod } = event
+  keypress(event: Picker.Event<NativeEvent>): boolean {
+    const { key, focusedEntry, controlMod } = event
     const Key = this._keys
 
     if (controlMod) {
@@ -300,14 +301,14 @@ export class Picker extends GObject.Object {
         return true
       }
       case Key.KEY_Return: {
-        if (focused) {
+        if (focusedEntry) {
           this.onActivate()
           return true
         }
         break
       }
       case Key.KEY_Tab: {
-        if (focused) {
+        if (focusedEntry) {
           const complete = this.onComplete()
           if (complete && this.text !== complete) {
             this.text = complete
@@ -325,7 +326,7 @@ export class Picker extends GObject.Object {
       }
       case Key.KEY_BackSpace: {
         if (
-          focused &&
+          focusedEntry &&
           !this.visibleCommand &&
           !this.isDefault(this.activePlugin) &&
           this.text === ""
@@ -337,7 +338,7 @@ export class Picker extends GObject.Object {
           return true
         }
 
-        if (!focused) {
+        if (!focusedEntry) {
           this.text = this.text.slice(0, -1)
           this.focus("entry")
           return true
@@ -349,19 +350,19 @@ export class Picker extends GObject.Object {
         this.focus("down")
         return true
       case Key.KEY_Up:
-        if (!focused) {
+        if (!focusedEntry) {
           this.focus("up")
           return true
         }
         break
       case Key.KEY_Right:
-        if (!focused) {
+        if (!focusedEntry) {
           this.focus("right")
           return true
         }
         break
       case Key.KEY_Left:
-        if (!focused) {
+        if (!focusedEntry) {
           this.focus("left")
           return true
         }
@@ -373,8 +374,8 @@ export class Picker extends GObject.Object {
         break
       }
       default: {
-        if (!focused) {
-          this.startSearch({ focused, key })
+        if (!focusedEntry) {
+          this.startSearch(event)
           return true
         }
       }
