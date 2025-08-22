@@ -138,9 +138,9 @@ export class Picker<NativeEvent = any> extends GObject.Object {
     this._keys = keys
   }
 
-  connect<S extends keyof this["$signals"]>(
-    signal: Extract<string, S>,
-    callback: GObject.SignalCallback<this, this["$signals"][S]>,
+  connect<S extends keyof Picker.SignalSignatures<NativeEvent>>(
+    signal: S,
+    callback: GObject.SignalCallback<this, Picker.SignalSignatures<NativeEvent>[S]>,
   ): number {
     return super.connect(signal, callback)
   }
