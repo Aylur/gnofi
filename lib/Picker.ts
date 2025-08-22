@@ -8,7 +8,7 @@ import GObject, {
   type GType,
   ParamSpec,
 } from "gnim/gobject"
-import { addChild, removeChild } from "gnim"
+import { appendChild, removeChild } from "gnim"
 import { PickerPlugin } from "./PickerPlugin"
 import { PickerCollectionPlugin } from "./PickerCollectionPlugin"
 import { HelpPickerPlugin } from "./HelpPickerPlugin"
@@ -56,6 +56,7 @@ export namespace Picker {
   export interface SignalSignatures extends GObject.Object.SignalSignatures {
     "notify::text": (spec: ParamSpec<string>) => void
     "notify::active-plugin": (spec: ParamSpec<PickerPlugin<unknown>>) => void
+    "notify::is-open": (spec: ParamSpec<boolean>) => void
     "focus": (target: FocusTarget) => void
     "close": () => void
   }
@@ -175,7 +176,7 @@ export class Picker extends GObject.Object {
     }
   }
 
-  [addChild](child: GObject.Object, type: string | null) {
+  [appendChild](child: GObject.Object, type: string | null) {
     if (!(child instanceof PickerPlugin)) {
       throw Error("Picker child not an instanceof PickerPlugin")
     }

@@ -2,6 +2,9 @@
   "name": "gnofi",
   "type": "module",
   "author": "Aylur",
+  "scripts": {
+    "typecheck": "tsc"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Aylur/gnofi.git"
@@ -9,7 +12,8 @@
   "devDependencies": {
     "@girs/gdkpixbuf-2.0": "latest",
     "@girs/gio-2.0": "latest",
-    "@girs/gjs": "latest"
+    "@girs/gjs": "latest",
+    "typescript": "latest"
   },
   "peerDependencies": {
     "fuse.js": "^7.1.0",
