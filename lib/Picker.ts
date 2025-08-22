@@ -30,9 +30,15 @@ type Keyname =
   | "n"
   | "p"
 
+// Gnome Shell extensions are not allowed to import Gdk
+// so this can either be Gdk or Clutter
+// even though gnome-shell itself does import Gdk?
+type KeyBackend = Record<`KEY_${Keyname}`, number> & {
+  keyval_name(keyval: number): string | null
+}
+
 export namespace Picker {
-  export interface Event<NativeEvent> {
-    nativeEvent?: NativeEvent
+  export interface Event {
     controlMod?: boolean
     focusedEntry: boolean
     key: number
@@ -47,25 +53,24 @@ export namespace Picker {
     | "right"
     | "left"
 
-  export interface SignalSignatures<NativeEvent> extends GObject.Object.SignalSignatures {
+  export interface SignalSignatures extends GObject.Object.SignalSignatures {
     "notify::text": (spec: ParamSpec<string>) => void
     "notify::active-plugin": (spec: ParamSpec<PickerPlugin<unknown>>) => void
-    "start-search": (event: Event<NativeEvent>) => void
     "focus": (target: FocusTarget) => void
     "close": () => void
   }
 
   export interface ConstructorProps extends GObject.Object.ConstructorProps {
-    keys: Record<`KEY_${Keyname}`, number>
+    keys: KeyBackend
     commandLeader?: string
     visibleCommand?: boolean
   }
 }
 
 @register()
-export class Picker<NativeEvent = any> extends GObject.Object {
+export class Picker extends GObject.Object {
   declare static $gtype: GType<Picker>
-  declare $signals: Picker.SignalSignatures<NativeEvent>
+  declare $signals: Picker.SignalSignatures
 
   @property(String) commandLeader
   @property(Boolean) visibleCommand
@@ -111,10 +116,6 @@ export class Picker<NativeEvent = any> extends GObject.Object {
     this.focus("entry")
   }
 
-  @signal(Object) startSearch(event: object) {
-    void event
-  }
-
   @signal(gtype<Picker.FocusTarget>(String)) focus(target: Picker.FocusTarget): void {
     return void target
   }
@@ -125,7 +126,7 @@ export class Picker<NativeEvent = any> extends GObject.Object {
   private _helpPlugin = new HelpPickerPlugin({ command: "help", picker: this })
   private _defaultPlugin = new PickerCollectionPlugin({ command: "default" })
   private _activePlugin = this._dockPlugin
-  private _keys: Record<`KEY_${Keyname}`, number>
+  private _keys: KeyBackend
 
   constructor({
     commandLeader = ":",
@@ -138,9 +139,9 @@ export class Picker<NativeEvent = any> extends GObject.Object {
     this._keys = keys
   }
 
-  connect<S extends keyof Picker.SignalSignatures<NativeEvent>>(
+  connect<S extends keyof Picker.SignalSignatures>(
     signal: S,
-    callback: GObject.SignalCallback<this, Picker.SignalSignatures<NativeEvent>[S]>,
+    callback: GObject.SignalCallback<this, Picker.SignalSignatures[S]>,
   ): number {
     return super.connect(signal, callback)
   }
@@ -278,8 +279,7 @@ export class Picker<NativeEvent = any> extends GObject.Object {
     }
   }
 
-  keypress(event: Picker.Event<NativeEvent>): boolean {
-    const { key, focusedEntry, controlMod } = event
+  keypress({ key, focusedEntry, controlMod }: Picker.Event): boolean {
     const Key = this._keys
 
     if (controlMod) {
@@ -375,7 +375,9 @@ export class Picker<NativeEvent = any> extends GObject.Object {
       }
       default: {
         if (!focusedEntry) {
-          this.startSearch(event)
+          const name = Key.keyval_name(key)
+          if (name) this.text += name
+          this.focus("entry")
           return true
         }
       }
