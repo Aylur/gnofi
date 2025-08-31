@@ -31,7 +31,9 @@ export class PickerCollectionPlugin extends PickerPlugin<unknown> {
   }
 
   removePlugin(plugin: PickerPlugin<unknown>) {
-    this.plugins = this.plugins.filter((p) => p !== plugin)
+    if (this.plugins.includes(plugin)) {
+      this.plugins = this.plugins.filter((p) => p !== plugin)
+    }
   }
 
   clear(): void {

@@ -197,6 +197,7 @@ export class Picker extends GObject.Object {
   [removeChild](child: GObject.Object) {
     if (child instanceof PickerPlugin) {
       this.removePlugin(child.command)
+      this.builtinDefaultPlugin.removePlugin(child)
     }
   }
 
