@@ -1,18 +1,24 @@
 import { register } from "gnim/gobject"
 import { request } from "./subprocess"
 import { ExternalPlugin } from "./ExternalPlugin"
+import Gio from "gi://Gio?version=2.0"
 
 @register()
 export class TransientPlugin extends ExternalPlugin {
+  private cancellable?: Gio.Cancellable = new Gio.Cancellable()
+
   protected async request(action: string, payload?: unknown) {
     try {
-      this.handleRequest(await request(this.executable, [action, payload]))
+      this.handleRequest(
+        await request(this.executable, [action, payload], this.cancellable),
+      )
     } catch (error) {
       this.error(error)
     }
   }
 
   public destroy(): void {
-    // nothing to do
+    this.cancellable?.cancel()
+    delete this.cancellable
   }
 }

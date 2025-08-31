@@ -137,7 +137,7 @@ export function subprocess(props: {
     },
     request(...request: Request) {
       try {
-        // why does write_all_async not work?
+        // FIXME: why does write_all_async not work?
         stdin.write_all(JSON.stringify(request) + "\n", null)
       } catch (error) {
         onError(error)
