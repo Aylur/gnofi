@@ -77,4 +77,11 @@ export class PickerPlugin<T> extends GObject.Object {
     this.description = description ?? ""
     this.icon = icon ?? "system-search-symbolic"
   }
+
+  connect<S extends keyof PickerPlugin.SignalSignatures<T>>(
+    signal: S,
+    callback: GObject.SignalCallback<this, PickerPlugin.SignalSignatures<T>[S]>,
+  ): number {
+    return super.connect(signal, callback)
+  }
 }

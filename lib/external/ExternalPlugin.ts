@@ -1,4 +1,4 @@
-import { register, signal } from "gnim/gobject"
+import GObject, { register, signal } from "gnim/gobject"
 import { PickerPlugin } from "../PickerPlugin"
 import type { Request } from "./subprocess"
 import type { Picker } from "../Picker"
@@ -6,10 +6,10 @@ import type { Picker } from "../Picker"
 export namespace ExternalPlugin {
   export interface SignalSignatures extends PickerPlugin.SignalSignatures<unknown> {
     "set-props": (id: string, props: object) => void
-    "action": (data: unknown) => void
-    "warning": (warning: unknown) => void
-    "error": (error: unknown) => void
-    "log": (error: unknown) => void
+    "action": (data: object) => void
+    "warning": (warning: string) => void
+    "error": (error: string) => void
+    "log": (error: string) => void
   }
 
   export interface ConstructorProps extends PickerPlugin.ConstructorProps {
@@ -46,23 +46,23 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
     void [id, props]
   }
 
-  @signal(Object)
-  error(error: unknown): void {
+  @signal(String)
+  error(error: string): void {
     void error
   }
 
-  @signal(Object)
-  warning(warning: unknown): void {
+  @signal(String)
+  warning(warning: string): void {
     void warning
   }
 
-  @signal(Object)
-  log(log: unknown): void {
+  @signal(String)
+  log(log: string): void {
     void log
   }
 
   @signal(Object)
-  action(data: unknown) {
+  action(data: object) {
     this.request("action", data)
   }
 
@@ -245,5 +245,13 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
 
   public destroy() {
     throw Error("missing implementation")
+  }
+
+  connect<S extends keyof ExternalPlugin.SignalSignatures>(
+    signal: S,
+    callback: GObject.SignalCallback<this, ExternalPlugin.SignalSignatures[S]>,
+  ): number {
+    // @ts-expect-error
+    return super.connect(signal, callback)
   }
 }

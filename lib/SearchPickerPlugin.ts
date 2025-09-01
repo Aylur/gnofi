@@ -4,7 +4,7 @@ import { SearchProviderProxy } from "./SearchProviderProxy"
 import { property, getter, register } from "gnim/gobject"
 
 export namespace SearchPickerPlugin {
-  export interface Props extends PickerPlugin.ConstructorProps {
+  export interface ConstructorProps extends PickerPlugin.ConstructorProps {
     provider: SearchProviderProxy.Props
     maxItems?: number
   }
@@ -25,7 +25,7 @@ export class SearchPickerPlugin extends PickerPlugin<SearchProviderProxy.Item> {
   private proxy: SearchProviderProxy
   private _resultSurplus = 0
 
-  constructor({ provider, maxItems = 6, ...props }: SearchPickerPlugin.Props) {
+  constructor({ provider, maxItems = 6, ...props }: SearchPickerPlugin.ConstructorProps) {
     super(props)
     this.proxy = new SearchProviderProxy(provider)
     this.maxItems = maxItems

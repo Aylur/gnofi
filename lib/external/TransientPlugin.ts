@@ -1,5 +1,5 @@
 import { register } from "gnim/gobject"
-import { request } from "./subprocess"
+import { request, unknownStr } from "./subprocess"
 import { ExternalPlugin } from "./ExternalPlugin"
 import Gio from "gi://Gio?version=2.0"
 
@@ -13,7 +13,7 @@ export class TransientPlugin extends ExternalPlugin {
         await request(this.executable, [action, payload], this.cancellable),
       )
     } catch (error) {
-      this.error(error)
+      this.error(unknownStr(error))
     }
   }
 

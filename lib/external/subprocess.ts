@@ -3,7 +3,31 @@ import GLib from "gi://GLib"
 
 export type Request<Action = string, Payload = unknown> = [Action?, Payload?]
 
-function read(
+export function unknownStr(v: unknown): string {
+  if (typeof v === "string") return v
+
+  if (v instanceof GLib.Error) {
+    return `${v.domain}: ${v.message}`
+  }
+
+  if (v instanceof Error) {
+    return `${v.name}: ${v.message}`
+  }
+
+  if (
+    typeof v === "object" &&
+    v !== null &&
+    "message" in v &&
+    typeof v.message === "string"
+  ) {
+    return v.message
+  }
+
+  return `${v}`
+}
+
+/** @throws {Error} */
+async function read(
   stream: Gio.DataInputStream,
   cancallable: Gio.Cancellable,
 ): Promise<string> {
@@ -12,18 +36,12 @@ function read(
       try {
         const [output] = stream.read_line_finish_utf8(res)
         if (typeof output !== "string") {
-          reject(new Error("failed to read stdin"))
+          reject(Error("failed to read stdin"))
         } else {
           resolve(output)
         }
       } catch (error) {
-        if (error instanceof GLib.Error) {
-          reject(`${error.domain}: ${error.message}`)
-        } else if (error instanceof Error) {
-          reject(`${error.name}: ${error.message}`)
-        } else {
-          reject(error)
-        }
+        reject(error)
       }
     })
   })
@@ -32,7 +50,7 @@ function read(
 function recursiveRead(
   stream: Gio.DataInputStream,
   onOutput: (out: string) => void,
-  onError: (err: unknown) => void,
+  onError: (err: string) => void,
   cancallable: Gio.Cancellable,
 ) {
   read(stream, cancallable)
@@ -40,11 +58,12 @@ function recursiveRead(
       onOutput(out)
       recursiveRead(stream, onOutput, onError, cancallable)
     })
-    .catch((err) => {
-      if (!cancallable.is_cancelled()) onError(err)
+    .catch((error) => {
+      if (!cancallable.is_cancelled()) onError(unknownStr(error))
     })
 }
 
+/** @throws {Error} */
 function proc(command: string) {
   const [, cmd] = GLib.shell_parse_argv(command)
   if (cmd === null) throw Error(`shell_parse_argv failed: '${command}'`)
@@ -57,6 +76,7 @@ function proc(command: string) {
   )
 }
 
+/** @throws {Error} */
 function parseRequest(string: string): Request {
   const json = JSON.parse(string)
 
@@ -70,7 +90,8 @@ function parseRequest(string: string): Request {
   return json as Request
 }
 
-export function request(
+/** @throws {string} */
+export async function request(
   cmd: string,
   request: Request,
   cancallable: Gio.Cancellable | null = null,
@@ -79,25 +100,27 @@ export function request(
 
   return new Promise((resolve, reject) => {
     p.communicate_utf8_async(JSON.stringify(request), cancallable, (_, res) => {
-      const [, stdout, stderr] = p.communicate_utf8_finish(res)
       try {
+        const [, stdout, stderr] = p.communicate_utf8_finish(res)
+
         if (p.get_successful()) {
           resolve(parseRequest(stdout))
         } else {
           reject(stderr.trim())
         }
       } catch (error) {
-        reject(error)
+        reject(unknownStr(error))
       }
     })
   })
 }
 
+/** @throws {Error} */
 export function subprocess(props: {
   executable: string
   onRequest: (req: Request) => void
-  onError: (err: unknown) => void
-  onLog: (content: unknown) => void
+  onError: (err: string) => void
+  onLog: (log: string) => void
 }) {
   const { executable, onRequest, onError, onLog } = props
   const [, cmd] = GLib.shell_parse_argv(executable)
@@ -125,7 +148,7 @@ export function subprocess(props: {
       try {
         onRequest(parseRequest(out))
       } catch (error) {
-        onError(error)
+        onError(unknownStr(error))
       }
     },
     onError,
@@ -142,6 +165,8 @@ export function subprocess(props: {
     cancallable,
   )
 
+  const encoder = new TextEncoder()
+
   return {
     exit() {
       cancallable.cancel()
@@ -150,15 +175,15 @@ export function subprocess(props: {
       // proc.force_exit()
     },
     request(...request: Request) {
-      stdin.write_all_async(
-        JSON.stringify(request) + "\n",
+      stdin.write_bytes_async(
+        encoder.encode(JSON.stringify(request) + "\n"),
         GLib.PRIORITY_HIGH,
         cancallable,
         (_, res) => {
           try {
             stdin.write_all_finish(res)
           } catch (error) {
-            onError(error)
+            onError(unknownStr(error))
           }
         },
       )
