@@ -169,6 +169,7 @@ export class Picker extends GObject.Object {
     for (const plugin of plugins) {
       if (plugin.command === "dock" && this.activePlugin === this.dockPlugin) {
         this.activePlugin = plugin
+        plugin.search(this.text)
       }
       this._plugins.set(plugin.command, plugin)
     }
