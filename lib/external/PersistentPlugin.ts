@@ -16,7 +16,6 @@ export class PersistentPlugin extends ExternalPlugin {
         try {
           this.handleRequest(req)
         } catch (error) {
-          logError(error)
           this.error(error)
         }
       },

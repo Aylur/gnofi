@@ -121,7 +121,13 @@ export function subprocess(props: {
       baseStream: proc.get_stdout_pipe()!,
       closeBaseStream: true,
     }),
-    (out) => onRequest(parseRequest(out)),
+    (out) => {
+      try {
+        onRequest(parseRequest(out))
+      } catch (error) {
+        onError(error)
+      }
+    },
     onError,
     cancallable,
   )
@@ -144,12 +150,18 @@ export function subprocess(props: {
       // proc.force_exit()
     },
     request(...request: Request) {
-      try {
-        // FIXME: why does write_all_async not work?
-        stdin.write_all(JSON.stringify(request) + "\n", null)
-      } catch (error) {
-        onError(error)
-      }
+      stdin.write_all_async(
+        JSON.stringify(request) + "\n",
+        GLib.PRIORITY_HIGH,
+        cancallable,
+        (_, res) => {
+          try {
+            stdin.write_all_finish(res)
+          } catch (error) {
+            onError(error)
+          }
+        },
+      )
     },
   }
 }
