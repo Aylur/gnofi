@@ -174,7 +174,7 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
         this.result = this.result.filter((_, i) => i !== payload)
         break
 
-      case "set": {
+      case "set:props": {
         if (typeof payload !== "object" || payload === null) {
           return this.error("invalid set call: payload is not an object")
         }

@@ -1,29 +1,33 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
+import type { PickerPlugin } from "lib/PickerPlugin"
 
 export type Request<Action = string, Payload = unknown> = [Action?, Payload?]
 
-export function unknownStr(v: unknown): string {
-  if (typeof v === "string") return v
+/**
+ * Utility to log errors through a {@link PickerPlugin}.
+ */
+export function errorStr(error: unknown): string {
+  if (typeof error === "string") return error
 
-  if (v instanceof GLib.Error) {
-    return `${v.domain}: ${v.message}`
+  if (error instanceof GLib.Error) {
+    return `${error.domain}: ${error.message}`
   }
 
-  if (v instanceof Error) {
-    return `${v.name}: ${v.message}`
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`
   }
 
   if (
-    typeof v === "object" &&
-    v !== null &&
-    "message" in v &&
-    typeof v.message === "string"
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
   ) {
-    return v.message
+    return error.message
   }
 
-  return `${v}`
+  return `${error}`
 }
 
 /** @throws {Error} */
@@ -59,7 +63,7 @@ function recursiveRead(
       recursiveRead(stream, onOutput, onError, cancallable)
     })
     .catch((error) => {
-      if (!cancallable.is_cancelled()) onError(unknownStr(error))
+      if (!cancallable.is_cancelled()) onError(errorStr(error))
     })
 }
 
@@ -109,7 +113,7 @@ export async function request(
           reject(stderr.trim())
         }
       } catch (error) {
-        reject(unknownStr(error))
+        reject(errorStr(error))
       }
     })
   })
@@ -148,7 +152,7 @@ export function subprocess(props: {
       try {
         onRequest(parseRequest(out))
       } catch (error) {
-        onError(unknownStr(error))
+        onError(errorStr(error))
       }
     },
     onError,
@@ -183,7 +187,7 @@ export function subprocess(props: {
           try {
             stdin.write_all_finish(res)
           } catch (error) {
-            onError(unknownStr(error))
+            onError(errorStr(error))
           }
         },
       )

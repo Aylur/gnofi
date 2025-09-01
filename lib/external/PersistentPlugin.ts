@@ -1,5 +1,5 @@
 import { register } from "gnim/gobject"
-import { subprocess, unknownStr } from "./subprocess"
+import { subprocess, errorStr } from "./subprocess"
 import { ExternalPlugin } from "./ExternalPlugin"
 
 @register()
@@ -17,12 +17,12 @@ export class PersistentPlugin extends ExternalPlugin {
           try {
             this.handleRequest(req)
           } catch (error) {
-            this.error(unknownStr(error))
+            this.error(errorStr(error))
           }
         },
       })
     } catch (error) {
-      this.error(unknownStr(error))
+      this.error(errorStr(error))
     }
   }
 
