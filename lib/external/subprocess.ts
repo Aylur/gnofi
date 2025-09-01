@@ -80,7 +80,15 @@ export function request(
   return new Promise((resolve, reject) => {
     p.communicate_utf8_async(JSON.stringify(request), cancallable, (_, res) => {
       const [, stdout, stderr] = p.communicate_utf8_finish(res)
-      void (p.get_successful() ? resolve(parseRequest(stdout)) : reject(stderr.trim()))
+      try {
+        if (p.get_successful()) {
+          resolve(parseRequest(stdout))
+        } else {
+          reject(stderr.trim())
+        }
+      } catch (error) {
+        reject(error)
+      }
     })
   })
 }

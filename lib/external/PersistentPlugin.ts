@@ -10,9 +10,16 @@ export class PersistentPlugin extends ExternalPlugin {
     super(props)
     this.proc = subprocess({
       executable: this.executable,
-      onRequest: this.handleRequest.bind(this),
       onError: this.error.bind(this),
       onLog: this.log.bind(this),
+      onRequest: (req) => {
+        try {
+          this.handleRequest(req)
+        } catch (error) {
+          logError(error)
+          this.error(error)
+        }
+      },
     })
   }
 
