@@ -33,9 +33,7 @@ type Keyname =
 // Gnome Shell extensions are not allowed to import Gdk
 // so this can either be Gdk or Clutter
 // even though gnome-shell itself does import Gdk?
-type KeyBackend = Record<`KEY_${Keyname}`, number> & {
-  keyval_name(keyval: number): string | null
-}
+type KeyBackend = Record<`KEY_${Keyname}`, number>
 
 export namespace Picker {
   export interface Event {
@@ -377,8 +375,7 @@ export class Picker extends GObject.Object {
       }
       default: {
         if (!focusedEntry) {
-          const name = Key.keyval_name(key)
-          if (name) this.text += name
+          this.text += String.fromCharCode(key)
           this.focus("entry")
           return true
         }
