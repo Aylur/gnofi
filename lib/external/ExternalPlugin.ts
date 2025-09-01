@@ -207,6 +207,18 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
         this.picker.text = `${payload}`
         break
 
+      case "log":
+        this.log(`${payload}`)
+        break
+
+      case "log:warning":
+        this.warning(`${payload}`)
+        break
+
+      case "log:error":
+        this.error(`${payload}`)
+        break
+
       // batch
       case "batch":
         if (Array.isArray(payload)) {
