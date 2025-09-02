@@ -1,4 +1,4 @@
-import { type GType, ParamSpec, register, property } from "gnim/gobject"
+import { type GType, ParamSpec, register, getter } from "gnim/gobject"
 import { PickerPlugin } from "./PickerPlugin"
 
 export namespace PickerCollectionPlugin {
@@ -12,7 +12,11 @@ export class PickerCollectionPlugin extends PickerPlugin<unknown> {
   declare static $gtype: GType<PickerCollectionPlugin>
   declare $signals: PickerCollectionPlugin.SignalSignatures
 
-  @property(Array) plugins = new Array<PickerPlugin<unknown>>()
+  #plugins = new Map<PickerPlugin<unknown>, () => void>()
+
+  @getter(Array) get plugins(): Array<PickerPlugin<unknown>> {
+    return [...this.#plugins.keys()]
+  }
 
   get result() {
     return this.plugins.flatMap((p) => p.result)
@@ -26,14 +30,15 @@ export class PickerCollectionPlugin extends PickerPlugin<unknown> {
   }
 
   addPlugin(plugin: PickerPlugin<unknown>) {
-    this.plugins.push(plugin)
+    const id = plugin.connect("notify::result", () => this.notify("result"))
+    this.#plugins.set(plugin, () => plugin.disconnect(id))
     this.notify("plugins")
   }
 
   removePlugin(plugin: PickerPlugin<unknown>) {
-    if (this.plugins.includes(plugin)) {
-      this.plugins = this.plugins.filter((p) => p !== plugin)
-    }
+    const cleanup = this.#plugins.get(plugin)
+    if (cleanup) cleanup()
+    this.#plugins.delete(plugin)
   }
 
   clear(): void {
