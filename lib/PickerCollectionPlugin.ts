@@ -1,4 +1,4 @@
-import { type GType, ParamSpec, register, getter } from "gnim/gobject"
+import { type GType, ParamSpec, register, getter, property } from "gnim/gobject"
 import { PickerPlugin } from "./PickerPlugin"
 
 export namespace PickerCollectionPlugin {
@@ -13,6 +13,8 @@ export class PickerCollectionPlugin extends PickerPlugin<unknown> {
   declare $signals: PickerCollectionPlugin.SignalSignatures
 
   #plugins = new Map<PickerPlugin<unknown>, () => void>()
+
+  @property(Boolean) hasResult = false
 
   @getter(Array) get plugins(): Array<PickerPlugin<unknown>> {
     return [...this.#plugins.keys()]
@@ -30,7 +32,11 @@ export class PickerCollectionPlugin extends PickerPlugin<unknown> {
   }
 
   addPlugin(plugin: PickerPlugin<unknown>) {
-    const id = plugin.connect("notify::result", () => this.notify("result"))
+    const id = plugin.connect("notify::result", () => {
+      this.notify("result")
+      this.hasResult = this.plugins.reduce((c, p) => c + p.result.length, 0) > 0
+    })
+
     this.#plugins.set(plugin, () => plugin.disconnect(id))
     this.notify("plugins")
   }
