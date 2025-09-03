@@ -1,4 +1,4 @@
-import GObject, { register, signal } from "gnim/gobject"
+import GObject, { AccumulatorType, register, signal } from "gnim/gobject"
 import { Picker } from "../Picker"
 import type { Request } from "./subprocess"
 import type { Gnofi } from "../Gnofi"
@@ -6,6 +6,7 @@ import type { Gnofi } from "../Gnofi"
 export namespace ExternalPicker {
   export interface SignalSignatures extends Picker.SignalSignatures<unknown> {
     "set-props": (id: string, props: object) => void
+    "settings": (settings: object) => void
     "action": (data: object) => void
     "warning": (warning: string) => void
     "error": (error: string) => void
@@ -13,7 +14,7 @@ export namespace ExternalPicker {
   }
 
   export interface ConstructorProps extends Picker.ConstructorProps {
-    picker: Gnofi
+    gnofi: Gnofi
     executable: string
   }
 }
@@ -37,7 +38,7 @@ function isFocusTarget(target: unknown): target is Gnofi.FocusTarget {
 export class ExternalPicker extends Picker<unknown> {
   declare $signals: ExternalPicker.SignalSignatures
 
-  private picker: Gnofi
+  private gnofi: Gnofi
   private delay: number = 0
   private debounce?: ReturnType<typeof setTimeout>
   public executable: string
@@ -45,6 +46,14 @@ export class ExternalPicker extends Picker<unknown> {
   @signal(String, Object)
   setProps(id: string, props: object): void {
     void [id, props]
+  }
+
+  @signal([Object], Boolean, {
+    default: false,
+    accumulator: AccumulatorType.TRUE_HANDLED,
+  })
+  settings(settings: object): boolean {
+    throw settings
   }
 
   @signal(String)
@@ -91,9 +100,9 @@ export class ExternalPicker extends Picker<unknown> {
     return ""
   }
 
-  constructor({ picker, executable, ...props }: ExternalPicker.ConstructorProps) {
+  constructor({ gnofi, executable, ...props }: ExternalPicker.ConstructorProps) {
     super(props)
-    this.picker = picker
+    this.gnofi = gnofi
     this.executable = executable
   }
 
@@ -101,42 +110,54 @@ export class ExternalPicker extends Picker<unknown> {
     if (!action) return
 
     switch (action) {
-      case "ignore":
+      case "ignore": {
         break
+      }
+      case "settings": {
+        if (payload === null || typeof payload !== "object") {
+          throw Error("invalid setting calls: payload not an object")
+        }
 
-      case "settings":
-        this.applySettings(payload)
+        const o = payload as Record<string, unknown>
+
+        // if a signal handler returns true skip setting default props
+        if (!this.settings(payload)) {
+          if (typeof o.description === "string") this.description = o.description
+          if (typeof o.icon === "string") this.icon = o.icon
+          if (typeof o.delay === "number") this.delay = o.delay
+          if (typeof o.hint === "string") this.hint = o.hint
+        }
         break
-
-      case "result":
+      }
+      case "result": {
         if (!Array.isArray(payload)) {
           return this.error("invalid result call: payload is not an array")
         }
 
         this.result = payload
         break
-
-      case "result:push":
+      }
+      case "result:push": {
         this.result.push(payload)
         this.notify("result")
         break
-
-      case "result:pop":
+      }
+      case "result:pop": {
         this.result.pop()
         this.notify("result")
         break
-
-      case "result:unshift":
+      }
+      case "result:unshift": {
         this.result.unshift(payload)
         this.notify("result")
         break
-
-      case "result:shift":
+      }
+      case "result:shift": {
         this.result.shift()
         this.notify("result")
         break
-
-      case "result:slice":
+      }
+      case "result:slice": {
         let start: number, end: number | undefined
 
         if (!Array.isArray(payload)) {
@@ -166,15 +187,15 @@ export class ExternalPicker extends Picker<unknown> {
         this.result.slice(start, end)
         this.notify("result")
         break
-
-      case "result:remove":
+      }
+      case "result:remove": {
         if (typeof payload !== "number") {
           return this.error("invalid result:remove call: payload is not an index number")
         }
 
         this.result = this.result.filter((_, i) => i !== payload)
         break
-
+      }
       case "set:props": {
         if (typeof payload !== "object" || payload === null) {
           return this.error("invalid set call: payload is not an object")
@@ -188,66 +209,49 @@ export class ExternalPicker extends Picker<unknown> {
         this.setProps($, props)
         break
       }
-
-      // picker
-      case "close":
-        this.picker.close()
+      case "close": {
+        this.gnofi.close()
         break
-      case "open":
-        this.picker.open("")
+      }
+      case "open": {
+        this.gnofi.open("")
         break
-      case "focus":
+      }
+      case "focus": {
         if (!isFocusTarget(payload)) {
           return this.error(
             `invalid focus call: payload "${payload}" is not a valid FocusTarget`,
           )
         }
-        this.picker.focus(payload)
+        this.gnofi.focus(payload)
         break
-      case "set:text":
-        this.picker.text = `${payload}`
+      }
+      case "set:text": {
+        this.gnofi.text = `${payload}`
         break
-
-      case "log":
+      }
+      case "log": {
         this.log(`${payload}`)
         break
-
-      case "log:warning":
+      }
+      case "log:warning": {
         this.warning(`${payload}`)
         break
-
-      case "log:error":
+      }
+      case "log:error": {
         this.error(`${payload}`)
         break
-
-      // batch
-      case "batch":
+      }
+      case "batch": {
         if (Array.isArray(payload)) {
           payload.map((req: Request) => this.handleRequest(req))
         }
         break
-      default:
+      }
+      default: {
         this.error(`unknown request action '${action}'`)
         break
-    }
-  }
-
-  protected applySettings(object: unknown) {
-    if (object === null || typeof object !== "object") {
-      throw Error("invalid settings: not an object")
-    }
-
-    const allowedKeys = ["description", "icon", "delay", "hint"]
-    const unknownKeys = Object.keys(object).filter((key) => !allowedKeys.includes(key))
-    const o = object as Record<string, unknown>
-
-    if (typeof o.description === "string") this.description = o.description
-    if (typeof o.icon === "string") this.icon = o.icon
-    if (typeof o.delay === "number") this.delay = o.delay
-    if (typeof o.hint === "string") this.hint = o.hint
-
-    if (unknownKeys.length > 0) {
-      this.warning(`unknown keys on settings: ${unknownKeys}`)
+      }
     }
   }
 
