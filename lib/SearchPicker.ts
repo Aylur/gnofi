@@ -1,17 +1,17 @@
 import GLib from "gi://GLib"
-import { PickerPlugin } from "./PickerPlugin"
-import { SearchProviderProxy } from "./SearchProviderProxy"
+import { Picker } from "./Picker"
+import { SearchProvider } from "./SearchProviderProxy"
 import { property, getter, register } from "gnim/gobject"
 
-export namespace SearchPickerPlugin {
-  export interface ConstructorProps extends PickerPlugin.ConstructorProps {
-    provider: SearchProviderProxy.Props
+export namespace SearchPicker {
+  export interface ConstructorProps extends Picker.ConstructorProps {
+    provider: SearchProvider.Props
     maxItems?: number
   }
 }
 
 @register()
-export class SearchPickerPlugin extends PickerPlugin<SearchProviderProxy.Item> {
+export class SearchPicker extends Picker<SearchProvider.Item> {
   @property(Number) maxItems: number
 
   @getter(Number) get resultSurplus() {
@@ -22,12 +22,12 @@ export class SearchPickerPlugin extends PickerPlugin<SearchProviderProxy.Item> {
     return this.proxy.appInfo
   }
 
-  private proxy: SearchProviderProxy
+  private proxy: SearchProvider
   private _resultSurplus = 0
 
-  constructor({ provider, maxItems = 6, ...props }: SearchPickerPlugin.ConstructorProps) {
+  constructor({ provider, maxItems = 6, ...props }: SearchPicker.ConstructorProps) {
     super(props)
-    this.proxy = new SearchProviderProxy(provider)
+    this.proxy = new SearchProvider(provider)
     this.maxItems = maxItems
   }
 

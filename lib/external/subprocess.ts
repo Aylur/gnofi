@@ -1,11 +1,11 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
-import type { PickerPlugin } from "lib/PickerPlugin"
+import type { Picker } from "../Picker"
 
 export type Request<Action = string, Payload = unknown> = [Action?, Payload?]
 
 /**
- * Utility to log errors through a {@link PickerPlugin}.
+ * Utility to log errors through a {@link Picker}.
  */
 export function errorStr(error: unknown): string {
   if (typeof error === "string") return error
@@ -181,7 +181,7 @@ export function subprocess(props: {
     request(...request: Request) {
       stdin.write_bytes_async(
         encoder.encode(JSON.stringify(request) + "\n"),
-        GLib.PRIORITY_HIGH,
+        GLib.PRIORITY_DEFAULT,
         cancallable,
         (_, res) => {
           try {

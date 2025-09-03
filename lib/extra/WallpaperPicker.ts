@@ -1,16 +1,16 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import { AccumulatorType, getter, property, register, setter, signal } from "gnim/gobject"
-import { PickerPlugin } from "../PickerPlugin"
+import { Picker } from "../Picker"
 import Fuse from "fuse.js/basic"
 import { ls } from "./os"
 
-export namespace WallpaparPickerPlugin {
-  export interface SignalSignatures extends PickerPlugin.SignalSignatures<Gio.File> {
+export namespace WallpaparPicker {
+  export interface SignalSignatures extends Picker.SignalSignatures<Gio.File> {
     filter(file: Gio.File): boolean
   }
 
-  export interface ConstructorProps extends PickerPlugin.ConstructorProps {
+  export interface ConstructorProps extends Picker.ConstructorProps {
     wallpaper?: Gio.File | null
     lookupDirectory?: string
     includeHidden?: boolean
@@ -19,8 +19,8 @@ export namespace WallpaparPickerPlugin {
 }
 
 @register()
-export class WallpaparPickerPlugin extends PickerPlugin<Gio.File> {
-  declare $signals: WallpaparPickerPlugin.SignalSignatures
+export class WallpaparPicker extends Picker<Gio.File> {
+  declare $signals: WallpaparPicker.SignalSignatures
 
   @property(String) lookupDirectory: string
   @property(Boolean) includeHidden: boolean
@@ -64,7 +64,7 @@ export class WallpaparPickerPlugin extends PickerPlugin<Gio.File> {
     includeHidden = false,
     wallpaper = null,
     ...props
-  }: WallpaparPickerPlugin.ConstructorProps) {
+  }: WallpaparPicker.ConstructorProps) {
     super(props)
     this.lookupDirectory = lookupDirectory
     this.recurseLevel = recurseLevel

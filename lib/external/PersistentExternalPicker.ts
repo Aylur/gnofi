@@ -1,12 +1,12 @@
 import { register } from "gnim/gobject"
 import { subprocess, errorStr } from "./subprocess"
-import { ExternalPlugin } from "./ExternalPlugin"
+import { ExternalPicker } from "./ExternalPicker"
 
 @register()
-export class PersistentPlugin extends ExternalPlugin {
+export class PersistentExternalPicker extends ExternalPicker {
   declare private proc?: ReturnType<typeof subprocess>
 
-  constructor(props: ExternalPlugin.ConstructorProps) {
+  constructor(props: ExternalPicker.ConstructorProps) {
     super(props)
     try {
       this.proc = subprocess({
@@ -28,7 +28,7 @@ export class PersistentPlugin extends ExternalPlugin {
 
   protected async request(action: string, payload?: unknown) {
     if (!this.proc) {
-      this.error("Cannot send request: subprocess failed")
+      this.error("cannot send request: subprocess failed")
     }
 
     this.proc?.request(action, payload)

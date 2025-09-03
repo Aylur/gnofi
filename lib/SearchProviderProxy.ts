@@ -13,7 +13,7 @@ type ItemVariant = {
   "clipboardText"?: Variant<"s">
 }
 
-export namespace SearchProviderProxy {
+export namespace SearchProvider {
   export type Item = SearchItem
 
   export type Props = {
@@ -24,7 +24,7 @@ export namespace SearchProviderProxy {
 }
 
 class SearchItem {
-  private proxy: SearchProviderProxy
+  private proxy: SearchProvider
 
   readonly variant: Record<string, Variant<any>>
 
@@ -34,7 +34,7 @@ class SearchItem {
   readonly description?: string
   readonly gicon?: Gio.Icon | null
 
-  constructor(proxy: SearchProviderProxy, variant: ItemVariant) {
+  constructor(proxy: SearchProvider, variant: ItemVariant) {
     this.proxy = proxy
     this.variant = variant
 
@@ -67,11 +67,11 @@ class SearchItem {
 }
 
 @iface("org.gnome.Shell.SearchProvider2")
-export class SearchProviderProxy extends Service {
+export class SearchProvider extends Service {
   #ready = false
   appInfo?: Gio.DesktopAppInfo
 
-  constructor({ busName, objectPath, desktopId }: SearchProviderProxy.Props) {
+  constructor({ busName, objectPath, desktopId }: SearchProvider.Props) {
     super()
 
     this.appInfo = Gio.DesktopAppInfo.new(desktopId)

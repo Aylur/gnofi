@@ -1,10 +1,10 @@
 import GObject, { register, signal } from "gnim/gobject"
-import { PickerPlugin } from "../PickerPlugin"
+import { Picker } from "../Picker"
 import type { Request } from "./subprocess"
-import type { Picker } from "../Picker"
+import type { Gnofi } from "../Gnofi"
 
-export namespace ExternalPlugin {
-  export interface SignalSignatures extends PickerPlugin.SignalSignatures<unknown> {
+export namespace ExternalPicker {
+  export interface SignalSignatures extends Picker.SignalSignatures<unknown> {
     "set-props": (id: string, props: object) => void
     "action": (data: object) => void
     "warning": (warning: string) => void
@@ -12,14 +12,14 @@ export namespace ExternalPlugin {
     "log": (error: string) => void
   }
 
-  export interface ConstructorProps extends PickerPlugin.ConstructorProps {
-    picker: Picker
+  export interface ConstructorProps extends Picker.ConstructorProps {
+    picker: Gnofi
     executable: string
   }
 }
 
-function isValidFocusTarget(target: unknown): target is Picker.FocusTarget {
-  const targets: Array<Picker.FocusTarget> = [
+function isFocusTarget(target: unknown): target is Gnofi.FocusTarget {
+  const targets: Array<Gnofi.FocusTarget> = [
     "left",
     "right",
     "backward",
@@ -32,11 +32,12 @@ function isValidFocusTarget(target: unknown): target is Picker.FocusTarget {
   return targets.some((t) => t === target)
 }
 
+/** @abstract */
 @register()
-export class ExternalPlugin extends PickerPlugin<unknown> {
-  declare $signals: ExternalPlugin.SignalSignatures
+export class ExternalPicker extends Picker<unknown> {
+  declare $signals: ExternalPicker.SignalSignatures
 
-  private picker: Picker
+  private picker: Gnofi
   private delay: number = 0
   private debounce?: ReturnType<typeof setTimeout>
   public executable: string
@@ -90,7 +91,7 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
     return ""
   }
 
-  constructor({ picker, executable, ...props }: ExternalPlugin.ConstructorProps) {
+  constructor({ picker, executable, ...props }: ExternalPicker.ConstructorProps) {
     super(props)
     this.picker = picker
     this.executable = executable
@@ -196,7 +197,7 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
         this.picker.open("")
         break
       case "focus":
-        if (!isValidFocusTarget(payload)) {
+        if (!isFocusTarget(payload)) {
           return this.error(
             `invalid focus call: payload "${payload}" is not a valid FocusTarget`,
           )
@@ -259,9 +260,9 @@ export class ExternalPlugin extends PickerPlugin<unknown> {
     throw Error("missing implementation")
   }
 
-  connect<S extends keyof ExternalPlugin.SignalSignatures>(
+  connect<S extends keyof ExternalPicker.SignalSignatures>(
     signal: S,
-    callback: GObject.SignalCallback<this, ExternalPlugin.SignalSignatures[S]>,
+    callback: GObject.SignalCallback<this, ExternalPicker.SignalSignatures[S]>,
   ): number {
     // @ts-expect-error
     return super.connect(signal, callback)

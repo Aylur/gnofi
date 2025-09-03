@@ -1,6 +1,6 @@
 import GLib from "gi://GLib?version=2.0"
 import { property, register } from "gnim/gobject"
-import { PickerPlugin } from "../PickerPlugin"
+import { Picker } from "../Picker"
 import { execAsync, exec, writeFileAsync } from "./os"
 
 // FIXME: support other achitectures
@@ -13,8 +13,8 @@ type Nixpkg = {
   version: string
 }
 
-export namespace NixPickerPlugin {
-  export interface Props extends PickerPlugin.ConstructorProps {
+export namespace NixPicker {
+  export interface Props extends Picker.ConstructorProps {
     maxItems?: number
     pkgs?: string
     enableCompletion?: boolean
@@ -22,7 +22,7 @@ export namespace NixPickerPlugin {
 }
 
 @register()
-export class NixPickerPlugin extends PickerPlugin<Nixpkg> {
+export class NixPicker extends Picker<Nixpkg> {
   @property(Number) maxItems: number
   @property(String) pkgs: string
   @property(Boolean) enableCompletion: boolean
@@ -34,7 +34,7 @@ export class NixPickerPlugin extends PickerPlugin<Nixpkg> {
     pkgs = "nixpkgs",
     enableCompletion = false,
     ...props
-  }: NixPickerPlugin.Props) {
+  }: NixPicker.Props) {
     super(props)
 
     this.maxItems = maxItems

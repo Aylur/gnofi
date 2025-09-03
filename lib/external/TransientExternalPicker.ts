@@ -1,10 +1,10 @@
 import { register } from "gnim/gobject"
 import { request, errorStr } from "./subprocess"
-import { ExternalPlugin } from "./ExternalPlugin"
+import { ExternalPicker } from "./ExternalPicker"
 import Gio from "gi://Gio?version=2.0"
 
 @register()
-export class TransientPlugin extends ExternalPlugin {
+export class TransientExternalPicker extends ExternalPicker {
   private cancellable?: Gio.Cancellable = new Gio.Cancellable()
 
   protected async request(action: string, payload?: unknown) {

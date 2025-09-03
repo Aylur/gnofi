@@ -1,23 +1,22 @@
 import Gio from "gi://Gio"
 import { type GType, ParamSpec, property, register } from "gnim/gobject"
-import { PickerPlugin } from "./PickerPlugin"
+import { Picker } from "./Picker"
 import Fuse from "fuse.js/basic"
 
-export namespace AppPickerPlugin {
-  export interface ConstructorProps extends PickerPlugin.ConstructorProps {
+export namespace AppPicker {
+  export interface ConstructorProps extends Picker.ConstructorProps {
     showHidden?: boolean
   }
 
-  export interface SignalSignatures
-    extends PickerPlugin.SignalSignatures<Gio.DesktopAppInfo> {
+  export interface SignalSignatures extends Picker.SignalSignatures<Gio.DesktopAppInfo> {
     "notify::show-hidden": (pspec: ParamSpec<boolean>) => void
   }
 }
 
 @register()
-export class AppPickerPlugin extends PickerPlugin<Gio.DesktopAppInfo> {
-  declare static $gtype: GType<AppPickerPlugin>
-  declare $signals: AppPickerPlugin.SignalSignatures
+export class AppPicker extends Picker<Gio.DesktopAppInfo> {
+  declare static $gtype: GType<AppPicker>
+  declare $signals: AppPicker.SignalSignatures
 
   @property(Boolean) showHidden: boolean
 
@@ -27,7 +26,7 @@ export class AppPickerPlugin extends PickerPlugin<Gio.DesktopAppInfo> {
     showHidden = false,
     icon = "system-search-symbolic",
     ...props
-  }: AppPickerPlugin.ConstructorProps) {
+  }: AppPicker.ConstructorProps) {
     super({ icon, ...props })
     this.showHidden = showHidden
     this.reload()
