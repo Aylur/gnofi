@@ -12,7 +12,6 @@ export class PersistentExternalPicker extends ExternalPicker {
       this.proc = subprocess({
         executable: this.executable,
         onError: this.error.bind(this),
-        onLog: this.log.bind(this),
         onRequest: (req) => {
           try {
             this.handleRequest(req)

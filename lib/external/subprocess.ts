@@ -124,9 +124,8 @@ export function subprocess(props: {
   executable: string
   onRequest: (req: Request) => void
   onError: (err: string) => void
-  onLog: (log: string) => void
 }) {
-  const { executable, onRequest, onError, onLog } = props
+  const { executable, onRequest, onError } = props
   const [, cmd] = GLib.shell_parse_argv(executable)
   if (cmd === null) throw Error(`shell_parse_argv failed: '${executable}'`)
 
@@ -164,7 +163,7 @@ export function subprocess(props: {
       baseStream: proc.get_stderr_pipe()!,
       closeBaseStream: true,
     }),
-    onLog,
+    onError,
     onError,
     cancallable,
   )
