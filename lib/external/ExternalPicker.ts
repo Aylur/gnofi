@@ -3,11 +3,24 @@ import { Picker } from "../Picker"
 import type { Request } from "./subprocess"
 import type { Gnofi } from "../Gnofi"
 
+type Settings = Record<string | number, unknown>
+const Settings = gtype<Settings>(Object)
+
+/**
+ * The {@link ExternalPicker.prototype.action} data type is an object.
+ * But we want to be able to request primitive types in which case
+ * this symbol is used to mark the value on an object.
+ */
+const actionData = Symbol("action data")
+
+type Data = Record<string | number, unknown> | { [actionData]: unknown }
+const Data = gtype<Data>(Object)
+
 export namespace ExternalPicker {
   export interface SignalSignatures extends Picker.SignalSignatures<unknown> {
     "notify::settings": (pspec: ParamSpec<object>) => void
     "set-props": (id: string, props: object) => void
-    "action": (data: object) => void
+    "action": (data: Data) => void
     "warning": (warning: string) => void
     "error": (error: string) => void
     "log": (error: string) => void
@@ -33,13 +46,12 @@ function isFocusTarget(target: unknown): target is Gnofi.FocusTarget {
   return targets.some((t) => t === target)
 }
 
-type Settings = Record<string | number, unknown>
-const Settings = gtype<Settings>(Object)
-
 /** @abstract */
 @register()
 export class ExternalPicker extends Picker<unknown> {
   declare $signals: ExternalPicker.SignalSignatures
+
+  static readonly actionData = actionData
 
   readonly executable: string
   private gnofi: Gnofi
@@ -68,9 +80,13 @@ export class ExternalPicker extends Picker<unknown> {
     void log
   }
 
-  @signal(Object)
-  action(data: object) {
-    this.request("action", data)
+  @signal(Data)
+  action(data: Data) {
+    if (actionData in data) {
+      this.request("action", data[actionData])
+    } else {
+      this.request("action", data)
+    }
   }
 
   clear(): void {
