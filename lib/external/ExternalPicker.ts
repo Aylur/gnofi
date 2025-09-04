@@ -46,6 +46,10 @@ function isFocusTarget(target: unknown): target is Gnofi.FocusTarget {
   return targets.some((t) => t === target)
 }
 
+// TODO:
+// Support inhibiting keybindings
+// for example to handle `<Ctrl>1` through `<Ctrl>9`
+
 /** @abstract */
 @register()
 export class ExternalPicker extends Picker<unknown> {

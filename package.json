@@ -2,13 +2,28 @@
   "name": "gnofi",
   "type": "module",
   "author": "Aylur",
-  "scripts": {
-    "typecheck": "tsc"
-  },
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Aylur/gnofi.git"
   },
+  "funding": {
+    "type": "kofi",
+    "url": "https://ko-fi.com/aylur"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "files": [
+    "lib"
+  ],
+  "engines": {
+    "gjs": ">=1.79.0"
+  },
+  "keywords": [
+    "GJS",
+    "Gnome"
+  ],
   "devDependencies": {
     "@girs/gdkpixbuf-2.0": "latest",
     "@girs/gio-2.0": "latest",
@@ -17,7 +32,7 @@
   },
   "peerDependencies": {
     "fuse.js": "^7.1.0",
-    "gnim": "^1.6.3"
+    "gnim": "^1.6.5"
   },
   "exports": {
     ".": "./lib/index.ts"

@@ -12,8 +12,8 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0
       gnim:
-        specifier: ^1.6.3
-        version: 1.6.3
+        specifier: ^1.6.5
+        version: 1.6.5
     devDependencies:
       '@girs/gdkpixbuf-2.0':
         specifier: latest
@@ -55,8 +55,8 @@ packages:
     resolution: {integrity: sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ==}
     engines: {node: '>=10'}
 
-  gnim@1.6.3:
-    resolution: {integrity: sha512-+R80E3N0C+9hxFZVqRuENLOm0Nnt77MVoxXz8ohYE1BcHRHEVSiFjl2H1t7rW8DEUCATnC7QDh/nh//yZFeUYg==}
+  gnim@1.6.5:
+    resolution: {integrity: sha512-I6fBT1NYULHejftt8MBQI5dYvDrXcwUVeP2UewqsKR96Q856+qS9uolTRz6c+tsarjsQeDwd/I4YDEdViuZtUw==}
     engines: {gjs: '>=1.79.0'}
 
   typescript@5.9.2:
@@ -112,6 +112,6 @@ snapshots:
 
   fuse.js@7.1.0: {}
 
-  gnim@1.6.3: {}
+  gnim@1.6.5: {}
 
   typescript@5.9.2: {}
