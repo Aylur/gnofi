@@ -189,10 +189,15 @@ export class ExternalPicker extends Picker<unknown> {
           return this.error("invalid result:remove call: payload is not an index number")
         }
 
-        this.result = this.result.filter((_, i) => i !== payload)
+        const item = this.result.at(payload)
+        if (!item) {
+          return this.error(`invalid result:remove call: no item with index "${payload}"`)
+        }
+
+        this.result = this.result.filter((i) => i !== item)
         break
       }
-      case "set:props": {
+      case "set-props": {
         if (typeof payload !== "object" || payload === null) {
           return this.error("invalid set call: payload is not an object")
         }
@@ -205,16 +210,12 @@ export class ExternalPicker extends Picker<unknown> {
         this.setProps($, props)
         break
       }
-      case "set:text": {
-        this.gnofi.text = `${payload}`
-        break
-      }
       case "close": {
         this.gnofi.close()
         break
       }
       case "open": {
-        this.gnofi.open("")
+        this.gnofi.open(typeof payload === "string" ? payload : "")
         break
       }
       case "focus": {
