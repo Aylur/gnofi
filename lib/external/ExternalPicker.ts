@@ -1,4 +1,4 @@
-import GObject, { ParamSpec, property, register, signal } from "gnim/gobject"
+import GObject, { gtype, ParamSpec, property, register, signal } from "gnim/gobject"
 import { Picker } from "../Picker"
 import type { Request } from "./subprocess"
 import type { Gnofi } from "../Gnofi"
@@ -33,6 +33,9 @@ function isFocusTarget(target: unknown): target is Gnofi.FocusTarget {
   return targets.some((t) => t === target)
 }
 
+type Settings = Record<string | number, unknown>
+const Settings = gtype<Settings>(Object)
+
 /** @abstract */
 @register()
 export class ExternalPicker extends Picker<unknown> {
@@ -43,7 +46,7 @@ export class ExternalPicker extends Picker<unknown> {
   private delay: number = 0
   private debounce?: ReturnType<typeof setTimeout>
 
-  @property(Object) settings: object = {}
+  @property(Settings) settings: Settings = {}
 
   @signal(String, Object)
   setProps(id: string, props: object): void {
