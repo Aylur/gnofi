@@ -122,7 +122,7 @@ export class ExternalPicker extends Picker<unknown> {
         if (typeof o.delay === "number") this.delay = o.delay
         if (typeof o.hint === "string") this.hint = o.hint
 
-        this.settings = payload
+        this.settings = payload as Settings
         break
       }
       case "result": {
