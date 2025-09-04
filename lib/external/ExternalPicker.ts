@@ -1,12 +1,12 @@
-import GObject, { AccumulatorType, register, signal } from "gnim/gobject"
+import GObject, { ParamSpec, property, register, signal } from "gnim/gobject"
 import { Picker } from "../Picker"
 import type { Request } from "./subprocess"
 import type { Gnofi } from "../Gnofi"
 
 export namespace ExternalPicker {
   export interface SignalSignatures extends Picker.SignalSignatures<unknown> {
+    "notify::settings": (pspec: ParamSpec<object>) => void
     "set-props": (id: string, props: object) => void
-    "settings": (settings: object) => void
     "action": (data: object) => void
     "warning": (warning: string) => void
     "error": (error: string) => void
@@ -38,22 +38,16 @@ function isFocusTarget(target: unknown): target is Gnofi.FocusTarget {
 export class ExternalPicker extends Picker<unknown> {
   declare $signals: ExternalPicker.SignalSignatures
 
+  readonly executable: string
   private gnofi: Gnofi
   private delay: number = 0
   private debounce?: ReturnType<typeof setTimeout>
-  public executable: string
+
+  @property(Object) settings: object = {}
 
   @signal(String, Object)
   setProps(id: string, props: object): void {
     void [id, props]
-  }
-
-  @signal([Object], Boolean, {
-    default: false,
-    accumulator: AccumulatorType.TRUE_HANDLED,
-  })
-  settings(settings: object): boolean {
-    throw settings
   }
 
   @signal(String)
@@ -120,13 +114,12 @@ export class ExternalPicker extends Picker<unknown> {
 
         const o = payload as Record<string, unknown>
 
-        // if a signal handler returns true skip setting default props
-        if (!this.settings(payload)) {
-          if (typeof o.description === "string") this.description = o.description
-          if (typeof o.icon === "string") this.icon = o.icon
-          if (typeof o.delay === "number") this.delay = o.delay
-          if (typeof o.hint === "string") this.hint = o.hint
-        }
+        if (typeof o.description === "string") this.description = o.description
+        if (typeof o.icon === "string") this.icon = o.icon
+        if (typeof o.delay === "number") this.delay = o.delay
+        if (typeof o.hint === "string") this.hint = o.hint
+
+        this.settings = payload
         break
       }
       case "result": {
@@ -209,6 +202,10 @@ export class ExternalPicker extends Picker<unknown> {
         this.setProps($, props)
         break
       }
+      case "set:text": {
+        this.gnofi.text = `${payload}`
+        break
+      }
       case "close": {
         this.gnofi.close()
         break
@@ -224,10 +221,6 @@ export class ExternalPicker extends Picker<unknown> {
           )
         }
         this.gnofi.focus(payload)
-        break
-      }
-      case "set:text": {
-        this.gnofi.text = `${payload}`
         break
       }
       case "log": {
