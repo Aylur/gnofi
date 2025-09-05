@@ -1,7 +1,39 @@
 import Gio from "gi://Gio"
+import GLib from "gi://GLib"
 import { type GType, register } from "gnim/gobject"
 import { Picker } from "./Picker"
 import Fuse from "fuse.js/basic"
+
+const currentDesktops = GLib.getenv("XDG_CURRENT_DESKTOP")?.split(";")
+
+function hasCommonItem<T>(list1: T[], list2: T[]): boolean {
+  const set2 = new Set(list2)
+  return list1.some((item) => set2.has(item))
+}
+
+function shouldShow(app: Gio.DesktopAppInfo | null): boolean {
+  if (!app || app.get_is_hidden()) {
+    return false
+  }
+
+  if (!currentDesktops) {
+    return true
+  }
+
+  const notShowIn = app.get_string_list("NotShowIn")
+
+  if (notShowIn.length > 0 && hasCommonItem(notShowIn, currentDesktops)) {
+    return false
+  }
+
+  const onlyShowIn = app.get_string_list("OnlyShowIn")
+
+  if (onlyShowIn.length > 0 && !hasCommonItem(onlyShowIn, currentDesktops)) {
+    return false
+  }
+
+  return true
+}
 
 @register()
 export class AppPicker extends Picker<Gio.DesktopAppInfo> {
@@ -18,8 +50,7 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
     const apps = Gio.AppInfo.get_all()
       .filter((app) => app.get_id() && app.get_name())
       .map((app) => Gio.DesktopAppInfo.new(app.get_id()!))
-      .filter((app) => !!app)
-      .filter((app) => !app.get_is_hidden())
+      .filter(shouldShow)
 
     this.fuse = new Fuse(apps, {
       keys: ["name", "id"],
@@ -46,6 +77,6 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
 
   search(text: string): Array<Gio.DesktopAppInfo> {
     super.search(text)
-    return this.fuse.search(text).map((i) => i.item)
+    return (this.result = this.fuse.search(text).map((i) => i.item))
   }
 }
