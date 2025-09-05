@@ -230,6 +230,12 @@ export class ExternalPicker extends Picker<unknown> {
         this.setProps($, props)
         break
       }
+      case "text":
+        if (typeof payload !== "string") {
+          return this.error(`invalid text call: payload is not a string`)
+        }
+        this.gnofi.text = payload
+        break
       case "close": {
         this.gnofi.close()
         break

@@ -105,13 +105,12 @@ export class Gnofi extends GObject.Object {
 
   @signal() close() {
     this.isOpen = false
-    this.text = ""
-    this.activePicker = this.dockPicker
   }
 
   @signal(String) open(text: string) {
-    this.isOpen = true
+    this.activePicker = this.dockPicker
     this.text = text
+    this.isOpen = true
     this.focus("entry")
   }
 
