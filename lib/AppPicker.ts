@@ -1,34 +1,16 @@
 import Gio from "gi://Gio"
-import { type GType, ParamSpec, property, register } from "gnim/gobject"
+import { type GType, register } from "gnim/gobject"
 import { Picker } from "./Picker"
 import Fuse from "fuse.js/basic"
-
-export namespace AppPicker {
-  export interface ConstructorProps extends Picker.ConstructorProps {
-    showHidden?: boolean
-  }
-
-  export interface SignalSignatures extends Picker.SignalSignatures<Gio.DesktopAppInfo> {
-    "notify::show-hidden": (pspec: ParamSpec<boolean>) => void
-  }
-}
 
 @register()
 export class AppPicker extends Picker<Gio.DesktopAppInfo> {
   declare static $gtype: GType<AppPicker>
-  declare $signals: AppPicker.SignalSignatures
-
-  @property(Boolean) showHidden: boolean
 
   private fuse!: Fuse<Gio.DesktopAppInfo>
 
-  constructor({
-    showHidden = false,
-    icon = "system-search-symbolic",
-    ...props
-  }: AppPicker.ConstructorProps) {
+  constructor({ icon = "system-search-symbolic", ...props }: Picker.ConstructorProps) {
     super({ icon, ...props })
-    this.showHidden = showHidden
     this.reload()
   }
 
@@ -37,6 +19,7 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
       .filter((app) => app.get_id() && app.get_name())
       .map((app) => Gio.DesktopAppInfo.new(app.get_id()!))
       .filter((app) => !!app)
+      .filter((app) => !app.get_is_hidden())
 
     this.fuse = new Fuse(apps, {
       keys: ["name", "id"],
@@ -63,9 +46,6 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
 
   search(text: string): Array<Gio.DesktopAppInfo> {
     super.search(text)
-    const res = this.fuse.search(text).map((i) => i.item)
-    return (this.result = this.showHidden
-      ? res
-      : res.filter((app) => !app.get_nodisplay() && !app.get_is_hidden()))
+    return this.fuse.search(text).map((i) => i.item)
   }
 }
