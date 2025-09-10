@@ -8,6 +8,7 @@ export namespace PickerGroup {
 
   export interface SignalSignatures extends Picker.SignalSignatures<unknown> {
     "notify::search-delay": (pspec: ParamSpec<number>) => void
+    "notify::searching": (pspec: ParamSpec<boolean>) => void
     "notify::pickers": (pspec: ParamSpec<Array<Picker>>) => void
   }
 }
@@ -22,6 +23,7 @@ export class PickerGroup extends Picker {
 
   @property(Number) searchDelay: number
   @property(Boolean) hasResult = false
+  @property(Boolean) searching = false
 
   @getter(Array) get pickers(): Array<Picker> {
     return [...this.#pickers.keys()]
@@ -71,6 +73,7 @@ export class PickerGroup extends Picker {
   }
 
   search(text: string): void {
+    this.searching = true
     if (this.#debounce) clearTimeout(this.#debounce)
 
     this.#debounce = setTimeout(() => {
@@ -78,6 +81,7 @@ export class PickerGroup extends Picker {
       for (const picker of this.pickers) {
         picker.search(text)
       }
+      this.searching = false
     }, this.searchDelay)
   }
 }
