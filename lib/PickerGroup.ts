@@ -2,7 +2,12 @@ import { type GType, ParamSpec, register, getter, property } from "gnim/gobject"
 import { Picker } from "./Picker"
 
 export namespace PickerGroup {
+  export interface ConstructorProps extends Picker.ConstructorProps {
+    searchDelay?: number
+  }
+
   export interface SignalSignatures extends Picker.SignalSignatures<unknown> {
+    "notify::search-delay": (pspec: ParamSpec<number>) => void
     "notify::pickers": (pspec: ParamSpec<Array<Picker>>) => void
   }
 }
@@ -12,8 +17,10 @@ export class PickerGroup extends Picker {
   declare static $gtype: GType<PickerGroup>
   declare $signals: PickerGroup.SignalSignatures
 
+  #debounce?: ReturnType<typeof setTimeout>
   #pickers = new Map<Picker, () => void>()
 
+  @property(Number) searchDelay: number
   @property(Boolean) hasResult = false
 
   @getter(Array) get pickers(): Array<Picker> {
@@ -24,8 +31,13 @@ export class PickerGroup extends Picker {
     return this.pickers.flatMap((p) => p.result)
   }
 
-  constructor({ icon = "system-search-symbolic", ...props }: Picker.ConstructorProps) {
+  constructor({
+    icon = "system-search-symbolic",
+    searchDelay = 0,
+    ...props
+  }: PickerGroup.ConstructorProps) {
     super({ icon, ...props })
+    this.searchDelay = searchDelay
   }
 
   addPicker(picker: Picker) {
@@ -59,9 +71,13 @@ export class PickerGroup extends Picker {
   }
 
   search(text: string): void {
-    super.search(text)
-    for (const picker of this.pickers) {
-      picker.search(text)
-    }
+    if (this.#debounce) clearTimeout(this.#debounce)
+
+    this.#debounce = setTimeout(() => {
+      super.search(text)
+      for (const picker of this.pickers) {
+        picker.search(text)
+      }
+    }, this.searchDelay)
   }
 }
