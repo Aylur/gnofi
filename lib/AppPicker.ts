@@ -35,11 +35,31 @@ function shouldShow(app: Gio.DesktopAppInfo | null): boolean {
   return true
 }
 
+function key(app: Gio.DesktopAppInfo, key: string) {
+  switch (key) {
+    case "name":
+      return app.get_name()
+    case "id":
+      return app.get_id()!
+    case "generic-name":
+      return app.get_generic_name() ?? ""
+    case "keywords":
+      return app.get_keywords()
+    default:
+      throw Error
+  }
+}
+
 @register()
 export class AppPicker extends Picker<Gio.DesktopAppInfo> {
   declare static $gtype: GType<AppPicker>
 
-  private fuse!: Fuse<Gio.DesktopAppInfo>
+  private fuse = new Fuse(new Array<Gio.DesktopAppInfo>(), {
+    keys: ["name", "id", "generic-name", "keywords"],
+    getFn(app, path) {
+      return Array.isArray(path) ? path.flatMap((p) => key(app, p)) : key(app, path)
+    },
+  })
 
   constructor({ icon = "system-search-symbolic", ...props }: Picker.ConstructorProps) {
     super({ icon, ...props })
@@ -47,21 +67,12 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
   }
 
   private reload() {
-    const apps = Gio.AppInfo.get_all()
-      .filter((app) => app.get_id() && app.get_name())
-      .map((app) => Gio.DesktopAppInfo.new(app.get_id()!))
-      .filter(shouldShow)
-
-    this.fuse = new Fuse(apps, {
-      keys: ["name", "id"],
-      getFn(app, path) {
-        return Array.isArray(path)
-          ? path.map((p) => (p === "id" ? app.get_id()! : app.get_name()))
-          : path === "id"
-            ? app.get_id()!
-            : app.get_name()
-      },
-    })
+    this.fuse.setCollection(
+      Gio.AppInfo.get_all()
+        .filter((app) => app.get_id() && app.get_name())
+        .map((app) => Gio.DesktopAppInfo.new(app.get_id()!))
+        .filter(shouldShow),
+    )
   }
 
   clear(): void {
