@@ -1,6 +1,7 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import GdkPixbuf from "gi://GdkPixbuf"
+import GioUnix from "gi://GioUnix"
 import { Variant, Service, iface, methodAsync } from "gnim/dbus"
 
 type ItemVariant = {
@@ -69,12 +70,12 @@ class SearchItem {
 @iface("org.gnome.Shell.SearchProvider2")
 export class SearchProvider extends Service {
   #ready = false
-  appInfo?: Gio.DesktopAppInfo
+  appInfo?: GioUnix.DesktopAppInfo
 
   constructor({ busName, objectPath, desktopId }: SearchProvider.Props) {
     super()
 
-    this.appInfo = Gio.DesktopAppInfo.new(desktopId)
+    this.appInfo = GioUnix.DesktopAppInfo.new(desktopId)
 
     this.proxy({ name: busName, objectPath })
       .then(() => (this.#ready = true))

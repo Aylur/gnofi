@@ -1,4 +1,5 @@
 import "@girs/gdkpixbuf-2.0"
 import "@girs/gio-2.0"
+import "@girs/giounix-2.0"
 import "@girs/gjs"
 import "@girs/gjs/dom"

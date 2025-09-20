@@ -1,5 +1,6 @@
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
+import GioUnix from "gi://GioUnix"
 import { type GType, register } from "gnim/gobject"
 import { Picker } from "./Picker"
 import Fuse from "fuse.js/basic"
@@ -11,8 +12,8 @@ function hasCommonItem<T>(list1: T[], list2: T[]): boolean {
   return list1.some((item) => set2.has(item))
 }
 
-function shouldShow(app: Gio.DesktopAppInfo | null): boolean {
-  if (!app || app.get_is_hidden()) {
+function shouldShow(app: GioUnix.DesktopAppInfo | null): boolean {
+  if (!app || app.get_boolean("Hidden")) {
     return false
   }
 
@@ -35,7 +36,7 @@ function shouldShow(app: Gio.DesktopAppInfo | null): boolean {
   return true
 }
 
-function key(app: Gio.DesktopAppInfo, key: string) {
+function key(app: GioUnix.DesktopAppInfo, key: string) {
   switch (key) {
     case "name":
       return app.get_name()
@@ -51,10 +52,10 @@ function key(app: Gio.DesktopAppInfo, key: string) {
 }
 
 @register()
-export class AppPicker extends Picker<Gio.DesktopAppInfo> {
+export class AppPicker extends Picker<GioUnix.DesktopAppInfo> {
   declare static $gtype: GType<AppPicker>
 
-  private fuse = new Fuse(new Array<Gio.DesktopAppInfo>(), {
+  private fuse = new Fuse(new Array<GioUnix.DesktopAppInfo>(), {
     keys: ["name", "id", "generic-name", "keywords"],
     getFn(app, path) {
       return Array.isArray(path) ? path.flatMap((p) => key(app, p)) : key(app, path)
@@ -70,7 +71,7 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
     this.fuse.setCollection(
       Gio.AppInfo.get_all()
         .filter((app) => app.get_id() && app.get_name())
-        .map((app) => Gio.DesktopAppInfo.new(app.get_id()!))
+        .map((app) => GioUnix.DesktopAppInfo.new(app.get_id()!))
         .filter(shouldShow),
     )
   }
@@ -83,10 +84,10 @@ export class AppPicker extends Picker<Gio.DesktopAppInfo> {
 
   activate(text: string): void {
     super.activate(text)
-    this.search(text).at(0)?.launch([], null)
+    this.result.at(0)?.launch([], null)
   }
 
-  search(text: string): Array<Gio.DesktopAppInfo> {
+  search(text: string): Array<GioUnix.DesktopAppInfo> {
     super.search(text)
     return (this.result = this.fuse.search(text).map((i) => i.item))
   }
