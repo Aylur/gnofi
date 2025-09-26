@@ -34,7 +34,7 @@
   },
   "peerDependencies": {
     "fuse.js": "^7.1.0",
-    "gnim": "^1.6.5"
+    "gnim": "^1.8.0"
   },
   "exports": {
     ".": "./lib/index.ts"
