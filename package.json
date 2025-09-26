@@ -41,8 +41,16 @@
   },
   "prettier": {
     "semi": false,
-    "tabWidth": 2,
     "printWidth": 90,
-    "quoteProps": "consistent"
+    "quoteProps": "consistent",
+    "overrides": [
+      {
+        "files": "**/*.md",
+        "options": {
+          "printWidth": 80,
+          "proseWrap": "always"
+        }
+      }
+    ]
   }
 }
